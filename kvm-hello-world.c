@@ -168,6 +168,12 @@ int run_vm(struct vm *vm, struct vcpu *vcpu, size_t sz)
 		case KVM_EXIT_HLT:
 			goto check;
 
+		case KVM_EXIT_RDTSC:
+			fprintf(stderr,	"Got KVM_EXIT_RDTSC\n");
+            fprintf(stderr, " SET DVAST.tsc to 0x%x\n", 0xc0ffee);
+            vcpu->kvm_run->dvast.tsc = 0xc0ffee;
+			continue;
+
 		case KVM_EXIT_IO:
 			if (vcpu->kvm_run->io.direction == KVM_EXIT_IO_OUT
 			    && vcpu->kvm_run->io.port == 0xE9) {
