@@ -170,7 +170,9 @@ int run_vm(struct vm *vm, struct vcpu *vcpu, size_t sz)
 			goto check;
 
 		case KVM_EXIT_RDTSC:
-            val = 0xc0ffee;
+            //val = 0xc0ffee;
+            val++;
+            vcpu->kvm_run->dvast.tsc = val;
 			fprintf(stderr,	"DRIVER: Got KVM_EXIT_RDTSC\n");
             fprintf(stderr, "DRIVER: SETTING DVAST.tsc to 0x%lx\n", val);
             vcpu->kvm_run->dvast.tsc = val;
