@@ -106,15 +106,26 @@ _start(void) {
 	for (p = "---\n"; *p; ++p)
 		outb(0xE9, *p);
 
-#if 0
+#if 1
+	for (p = "Guest: Calling rdtsc #2\n"; *p; ++p)
+		outb(0xE9, *p);
+
     /* RDTSC #2 */
     asm volatile("rdtsc" : "=r"(TSC2) : /* no input */ : "eax", "edx");
     //memset(str, '\0', 128);
     itoa(TSC2, str, 10);
 
+
+	for (p = "Guest: Result for rdtsc #2\n---\n"; *p; ++p)
+		outb(0xE9, *p);
+
 	for (p = str; *p; ++p)
 		outb(0xE9, *p);
 	outb(0xE9, '\n');
+
+	for (p = "---\n"; *p; ++p)
+		outb(0xE9, *p);
+
 #endif
 
 #if 1
