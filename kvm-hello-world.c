@@ -157,6 +157,7 @@ int run_vm(struct vm *vm, struct vcpu *vcpu, size_t sz)
 {
 	struct kvm_regs regs;
 	uint64_t memval = 0;
+    uint64_t val = 0;
 
 	for (;;) {
 		if (ioctl(vcpu->fd, KVM_RUN, 0) < 0) {
@@ -169,9 +170,10 @@ int run_vm(struct vm *vm, struct vcpu *vcpu, size_t sz)
 			goto check;
 
 		case KVM_EXIT_RDTSC:
-			fprintf(stderr,	"Got KVM_EXIT_RDTSC\n");
-            fprintf(stderr, " SET DVAST.tsc to 0x%x\n", 0xc0ffee);
-            vcpu->kvm_run->dvast.tsc = 0xc0ffee;
+            val = 0xc0ffee;
+			fprintf(stderr,	"DRIVER: Got KVM_EXIT_RDTSC\n");
+            fprintf(stderr, "DRIVER: SETTING DVAST.tsc to 0x%lx\n", val);
+            vcpu->kvm_run->dvast.tsc = val;
 			continue;
 
 		case KVM_EXIT_IO:
@@ -412,7 +414,7 @@ int run_long_mode(struct vm *vm, struct vcpu *vcpu)
 	struct kvm_sregs sregs;
 	struct kvm_regs regs;
 
-	printf("Testing 64-bit mode\n");
+	printf("DRIVER: Testing 64-bit mode\n");
 
         if (ioctl(vcpu->fd, KVM_GET_SREGS, &sregs) < 0) {
 		perror("KVM_GET_SREGS");

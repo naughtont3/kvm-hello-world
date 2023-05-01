@@ -88,14 +88,23 @@ _start(void) {
     char str[128];
     register long long TSC2;
 
+	for (p = "Guest: Calling rdtsc\n"; *p; ++p)
+		outb(0xE9, *p);
+
     /* RDTSC #1 */
     asm volatile("rdtsc" : "=r"(TSC2) : /* no input */ : "eax", "edx");
     //memset(str, '\0', 128);
     itoa(TSC2, str, 10);
 
+	for (p = "Guest: Result for rdtsc\n---\n"; *p; ++p)
+		outb(0xE9, *p);
+
 	for (p = str; *p; ++p)
 		outb(0xE9, *p);
 	outb(0xE9, '\n');
+
+	for (p = "---\n"; *p; ++p)
+		outb(0xE9, *p);
 
 #if 0
     /* RDTSC #2 */
@@ -109,7 +118,7 @@ _start(void) {
 #endif
 
 #if 1
-	for (p = "Goooo, world!\n"; *p; ++p)
+	for (p = "Guest: Done halting\n"; *p; ++p)
 		outb(0xE9, *p);
 #endif
 
