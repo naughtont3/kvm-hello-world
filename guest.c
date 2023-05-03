@@ -10,24 +10,25 @@
  */
 /* QUICK copy/paste itoa() - https://www.geeksforgeeks.org/implement-itoa/ */
 /* A utility function to reverse a string  */
-void swap(char str1, char str2)
-{
-	char temp = str1;
-	str1 = str2;
-	str2 = temp;
-}
-
-void reverse(char str[], int length)
+void reverse(char *str, int length)
 {
     int start = 0;
     int end = length -1;
+
     while (start < end)
     {
-        swap(*(str+start), *(str+end));
+	    char tmp1 = *(str+start);
+        char tmp2 = *(str+end);
+
+        *(str+end) = tmp1;
+        *(str+start) = tmp2;
+
         start++;
         end--;
     }
+    return;
 }
+
 /* QUICK copy/paste itoa() - https://www.geeksforgeeks.org/implement-itoa/ */
 char* itoa(long long num, char* str, int base)
 {
@@ -65,7 +66,7 @@ char* itoa(long long num, char* str, int base)
     str[i] = '\0'; // Append string terminator
 
     // Reverse the string
-//    reverse(str, i);
+    reverse(str, i);
 
     return str;
 }
@@ -91,6 +92,16 @@ __attribute__((section(".start")))
 _start(void) {
     char str[128];
     register long long TSC;
+#if 0
+    /* Test the itoa() with a static value */
+    char str2[128];
+    register long long FOO;
+    FOO = 94065830478992;
+    itoa(FOO, str2, 10);
+    msg("FOO: \n---\n");
+    msg(str2);
+    msg("\n---\n");
+#endif
 
     /* RDTSC #1 */
     msg("Guest: Calling rdtsc\n");
@@ -103,7 +114,7 @@ _start(void) {
     msg(str);
     msg("\n---\n");
 
-#if 1
+#if 0
     /* RDTSC #2 */
     msg("Guest: Calling rdtsc #2\n");
 
@@ -112,6 +123,20 @@ _start(void) {
     itoa(TSC, str, 10);
 
     msg("Guest: Result for rdtsc #2\n---\n");
+    msg(str);
+    msg("\n---\n");
+
+#endif
+
+#if 0
+    /* RDTSC #3 */
+    msg("Guest: Calling rdtsc #3\n");
+
+    asm volatile("rdtsc" : "=r"(TSC) : /* no input */ : "eax", "edx");
+
+    itoa(TSC, str, 10);
+
+    msg("Guest: Result for rdtsc #3\n---\n");
     msg(str);
     msg("\n---\n");
 
