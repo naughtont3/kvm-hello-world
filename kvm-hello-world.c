@@ -165,16 +165,22 @@ int run_vm(struct vm *vm, struct vcpu *vcpu, size_t sz)
 			exit(1);
 		}
 
+
 		switch (vcpu->kvm_run->exit_reason) {
 		case KVM_EXIT_HLT:
+		    fprintf(stderr, "DRIVER: RUN-LOOP EXIT REASON: HLT (%d)\n", vcpu->kvm_run->exit_reason);
 			goto check;
 
 		case KVM_EXIT_RDTSC:
+		    fprintf(stderr, "DRIVER: RUN-LOOP EXIT REASON: RDTSC (%d)\n", vcpu->kvm_run->exit_reason);
             //val = 0xc0ffee;
             val++;
             vcpu->kvm_run->dvast.tsc = val;
 			fprintf(stderr,	"DRIVER: Got KVM_EXIT_RDTSC\n");
             fprintf(stderr, "DRIVER: Passing kvm_run.DVAST.tsc = 0x%lx\n", val);
+            fprintf(stderr, "DRIVER: delay 1...\n");
+            sleep(1);
+
             vcpu->kvm_run->dvast.tsc = val;
 			continue;
 
@@ -190,6 +196,7 @@ int run_vm(struct vm *vm, struct vcpu *vcpu, size_t sz)
 
 			/* fall through */
 		default:
+		    fprintf(stderr, "DRIVER: RUN-LOOP EXIT REASON: DEFAULT (%d)\n", vcpu->kvm_run->exit_reason);
 			fprintf(stderr,	"Got exit_reason %d,"
 				" expected KVM_EXIT_HLT (%d)\n",
 				vcpu->kvm_run->exit_reason, KVM_EXIT_HLT);
