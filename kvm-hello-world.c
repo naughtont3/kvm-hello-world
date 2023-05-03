@@ -174,7 +174,7 @@ int run_vm(struct vm *vm, struct vcpu *vcpu, size_t sz)
             val++;
             vcpu->kvm_run->dvast.tsc = val;
 			fprintf(stderr,	"DRIVER: Got KVM_EXIT_RDTSC\n");
-            fprintf(stderr, "DRIVER: SETTING DVAST.tsc to 0x%lx\n", val);
+            fprintf(stderr, "DRIVER: Passing kvm_run.DVAST.tsc = 0x%lx\n", val);
             vcpu->kvm_run->dvast.tsc = val;
 			continue;
 
@@ -218,6 +218,7 @@ int run_vm(struct vm *vm, struct vcpu *vcpu, size_t sz)
 	return 1;
 }
 
+#if 0 /* LONGMODE_ONLY */
 extern const unsigned char guest16[], guest16_end[];
 
 int run_real_mode(struct vm *vm, struct vcpu *vcpu)
@@ -362,6 +363,7 @@ int run_paged_32bit_mode(struct vm *vm, struct vcpu *vcpu)
 	memcpy(vm->mem, guest32, guest32_end-guest32);
 	return run_vm(vm, vcpu, 4);
 }
+#endif /* LONGMODE_ONLY */
 
 extern const unsigned char guest64[], guest64_end[];
 
@@ -451,16 +453,24 @@ int main(int argc, char **argv)
 {
 	struct vm vm;
 	struct vcpu vcpu;
+#if 0 /* LONGMODE_ONLY */
 	enum {
 		REAL_MODE,
 		PROTECTED_MODE,
 		PAGED_32BIT_MODE,
 		LONG_MODE,
 	} mode = REAL_MODE;
+#else
+	enum {
+		LONG_MODE,
+	} mode = LONG_MODE;
+#endif /* LONGMODE_ONLY */
 	int opt;
 
-	while ((opt = getopt(argc, argv, "rspl")) != -1) {
+	//while ((opt = getopt(argc, argv, "rspl")) != -1) {
+	while ((opt = getopt(argc, argv, "l")) != -1) {
 		switch (opt) {
+#if 0 /* LONGMODE_ONLY */
 		case 'r':
 			mode = REAL_MODE;
 			break;
@@ -472,6 +482,7 @@ int main(int argc, char **argv)
 		case 'p':
 			mode = PAGED_32BIT_MODE;
 			break;
+#endif /* LONGMODE_ONLY */
 
 		case 'l':
 			mode = LONG_MODE;
@@ -488,6 +499,8 @@ int main(int argc, char **argv)
 	vcpu_init(&vm, &vcpu);
 
 	switch (mode) {
+
+#if 0  /* LONGMODE_ONLY */
 	case REAL_MODE:
 		return !run_real_mode(&vm, &vcpu);
 
@@ -496,6 +509,7 @@ int main(int argc, char **argv)
 
 	case PAGED_32BIT_MODE:
 		return !run_paged_32bit_mode(&vm, &vcpu);
+#endif /* LONGMODE_ONLY */
 
 	case LONG_MODE:
 		return !run_long_mode(&vm, &vcpu);
