@@ -78,63 +78,48 @@ static void outb(uint16_t port, uint8_t value) {
         : "memory");
 }
 
+void msg(char *msg)
+{
+    const char *p = NULL;
+	for (p = msg; *p; ++p)
+		outb(0xE9, *p);
+}
 
 void
 __attribute__((noreturn))
 __attribute__((section(".start")))
 _start(void) {
-	const char *p;
-
     char str[128];
-    register long long TSC2;
-
-	for (p = "Guest: Calling rdtsc\n"; *p; ++p)
-		outb(0xE9, *p);
+    register long long TSC;
 
     /* RDTSC #1 */
-    asm volatile("rdtsc" : "=r"(TSC2) : /* no input */ : "eax", "edx");
-    //memset(str, '\0', 128);
-    itoa(TSC2, str, 10);
+    msg("Guest: Calling rdtsc\n");
 
-	for (p = "Guest: Result for rdtsc\n---\n"; *p; ++p)
-		outb(0xE9, *p);
+    asm volatile("rdtsc" : "=r"(TSC) : /* no input */ : "eax", "edx");
 
-	for (p = str; *p; ++p)
-		outb(0xE9, *p);
-	outb(0xE9, '\n');
+    itoa(TSC, str, 10);
 
-	for (p = "---\n"; *p; ++p)
-		outb(0xE9, *p);
+    msg("Guest: Result for rdtsc\n---\n");
+    msg(str);
+    msg("\n---\n");
 
 #if 1
-	for (p = "Guest: Calling rdtsc #2\n"; *p; ++p)
-		outb(0xE9, *p);
-
     /* RDTSC #2 */
-    asm volatile("rdtsc" : "=r"(TSC2) : /* no input */ : "eax", "edx");
-    //memset(str, '\0', 128);
-    itoa(TSC2, str, 10);
+    msg("Guest: Calling rdtsc #2\n");
 
+    asm volatile("rdtsc" : "=r"(TSC) : /* no input */ : "eax", "edx");
 
-	for (p = "Guest: Result for rdtsc #2\n---\n"; *p; ++p)
-		outb(0xE9, *p);
+    itoa(TSC, str, 10);
 
-	for (p = str; *p; ++p)
-		outb(0xE9, *p);
-	outb(0xE9, '\n');
-
-	for (p = "---\n"; *p; ++p)
-		outb(0xE9, *p);
+    msg("Guest: Result for rdtsc #2\n---\n");
+    msg(str);
+    msg("\n---\n");
 
 #endif
 
-#if 1
-	for (p = "Guest: Done halting\n"; *p; ++p)
-		outb(0xE9, *p);
-#endif
+    msg("Guest: Done halting\n");
 
 	*(long *) 0x400 = 42;
-
 	for (;;)
 		asm("hlt" : /* empty */ : "a" (42) : "memory");
 }
