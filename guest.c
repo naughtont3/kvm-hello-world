@@ -1,14 +1,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#if 1
 /*
- *  //long long tmp = 777;
- *  //long long tmp = 925277023586666;
- *  // FIXME: fix reverse in itoa() and truncation for large number
- *  long long tmp   = 1234567898;
+ * itoa/reverse are mostly copy/paste from https://www.geeksforgeeks.org/implement-itoa/
  */
-/* QUICK copy/paste itoa() - https://www.geeksforgeeks.org/implement-itoa/ */
 /* A utility function to reverse a string  */
 void reverse(char *str, int length)
 {
@@ -29,7 +24,7 @@ void reverse(char *str, int length)
     return;
 }
 
-/* QUICK copy/paste itoa() - https://www.geeksforgeeks.org/implement-itoa/ */
+/* Convert a number to a string (useful for printing) */
 char* itoa(long long num, char* str, int base)
 {
     int i = 0;
@@ -70,7 +65,6 @@ char* itoa(long long num, char* str, int base)
 
     return str;
 }
-#endif
 
 static void outb(uint16_t port, uint8_t value) {
 	asm("outb %0,%1"    /* src (port), dst (value) */
@@ -86,12 +80,65 @@ void msg(char *msg)
 		outb(0xE9, *p);
 }
 
+
+void do_rdtsc(char *label)
+{
+    unsigned long long msr = 0;
+    char str[128];
+    msg(label);
+
+    /*
+     * TJN: Trying this version instead of my other rdtsc read
+     *      methods w/o the shifting as it seems to work better
+     *      in my non-native machine tests (i.e., tests on kvm).
+     */
+    /* https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html#Volatile
+     *
+     * asm asm-qualifiers ( AssemblerTemplate
+     *                : OutputOperands
+     *                : InputOperands
+     *                : Clobbers
+     *                : GotoLabels)
+     */
+    asm volatile ( "rdtsc\n\t" // Returns the time in EDX:EAX.
+        "shl $32, %%rdx\n\t"   // Shift the upper bits left.
+        "or %%rdx, %0"         // 'Or' in the lower bits.
+        : "=a" (msr)
+        :
+        : "rdx");
+
+    itoa(msr, str, 16);
+    //msg("Guest: TSC\n---\n");
+    msg("Guest: TSC = 0x");
+    msg(str);
+    msg("\n---\n");
+
+    return;
+}
+
 void
 __attribute__((noreturn))
 __attribute__((section(".start")))
 _start(void) {
-    char str[128];
-    register long long TSC;
+
+    do_rdtsc("Guest: Calling rdtsc #1\n");
+    do_rdtsc("Guest: Calling rdtsc #2\n");
+    do_rdtsc("Guest: Calling rdtsc #3\n");
+    do_rdtsc("Guest: Calling rdtsc #4\n");
+
+    msg("Guest: Done halting\n");
+
+	*(long *) 0x400 = 42;
+	for (;;)
+		asm("hlt" : /* empty */ : "a" (42) : "memory");
+}
+
+
+/*
+ * --- OLD/Testing snippets ---
+ *  IGNORE THIS STUFF...
+ */
+
 #if 0
     /* Test the itoa() with a static value */
     char str2[128];
@@ -102,6 +149,9 @@ _start(void) {
     msg(str2);
     msg("\n---\n");
 #endif
+#if 0
+    char str[128];
+    register long long TSC;
 
     /* RDTSC #1 */
     msg("Guest: Calling rdtsc\n");
@@ -113,6 +163,7 @@ _start(void) {
     msg("Guest: Result for rdtsc\n---\n");
     msg(str);
     msg("\n---\n");
+#endif
 
 #if 0
     /* RDTSC #2 */
@@ -141,10 +192,3 @@ _start(void) {
     msg("\n---\n");
 
 #endif
-
-    msg("Guest: Done halting\n");
-
-	*(long *) 0x400 = 42;
-	for (;;)
-		asm("hlt" : /* empty */ : "a" (42) : "memory");
-}
